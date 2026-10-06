@@ -937,6 +937,15 @@ html.present .rp-seg{font-size:17px}
 .rp-texts dd[lang="en"],.rp-texts dd[lang="tr"]{font-family:inherit;font-size:15px}
 .rp-heard{color:var(--emerald)}
 .dev-attempt{border:1px solid var(--line);border-radius:12px;padding:8px;margin:8px 0;font-size:13px}
+.scan-demo{display:grid;justify-items:center;gap:6px;margin:14px auto 4px;max-width:340px;width:100%}
+.scan-demo .btn{width:100%}
+.scan-demo-note{margin:0;font-size:13.5px;color:var(--muted);text-align:center}
+.start-card{margin:4px 0 0;padding:14px 16px;gap:6px;text-align:start}
+.start-card .sk-card-top .logo{font-size:26px}
+.start-card .sk-card-main{margin:2px 0 0;font-size:16px;line-height:1.6}
+.start-card .muted{margin:0;font-size:13.5px}
+.start-card-btns{display:grid;gap:8px;margin-top:8px}
+.start-card-btns .btn{min-height:50px;font-size:16px}
 /* developer test mode */
 .row-btns{display:grid;grid-template-columns:2fr 1fr;gap:10px}
 .dev-sum{font-size:18px}

@@ -24,8 +24,12 @@
             h('span',{class:'ji-step', 'aria-hidden':'true', style:`--i:${i}`}, h('span',{class:'ji-dot'}), h('span',{class:'ji-label'}, s)) ]))),
       h('div',{class:'start-actions'},
         ui.button(t('start.begin'),{onclick:()=>{ SK.store.set({ afterLang:'path' }); go('lang'); }}),
-        ui.button(t('start.scan'),{variant:'ghost', icon:'qr', onclick:()=>go('scan')}),
-        h('p',{class:'start-note'}, t('start.note')),
+        // بطاقة سكينة من البداية: إنشاء بطاقة أو مسحها (نفس محتوى صفحة «بطاقتي»)
+        h('div',{class:'start-card-btns'},
+            SK.store.get().session && SK.store.get().cardInfo
+              ? ui.button(t('common.myCard'),{variant:'ghost', icon:'card', onclick:()=>go('mycard')})
+              : ui.button(t('cd.create'),{variant:'ghost', icon:'card', onclick:()=>go('create')}),
+            ui.button(t('start.scan'),{variant:'ghost', icon:'qr', onclick:()=>go('scan')})),
         h('button',{class:'lang-link', onclick:()=>go('lang')}, ui.svg(I.globe), h('span',{}, lang), h('span',{class:'lang-link-sep', 'aria-hidden':'true'}, '·'), h('span',{}, t('lang.change')))));
   };
 

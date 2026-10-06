@@ -99,53 +99,39 @@
   S.card.nav = 'card';
 
   // ---------- 5. scan / enter code ----------
-  let stream = null, loop = null;
-  function stopCam(){ if (loop) cancelAnimationFrame(loop); loop=null; if (stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } }
-  SK.stopCam = stopCam;
-  function loadJsQR(){ return new Promise((res,rej)=>{ if (window.jsQR) return res(); const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'; s.onload=res; s.onerror=rej; document.head.append(s); }); }
+  /* No camera here: the page offers a demo scan of the Sakeenah card already saved on this device (its existing QR token),
+     and manual entry of the card code. No camera permission is ever requested. */
   function arrive(input){
     const res = P().resolve(input);
     if (!res) return false;
-    stopCam(); signIn(res);
+    signIn(res);
     SK.store.set({ cardInfo:{ qr:P().QR_PREFIX+res.session.token, code:res.session.code, name:res.card.displayName } });
     go('welcome',{replace:true}); return true;
   }
   S.scan = () => {
     const status = h('p',{class:'hint center', 'aria-live':'polite'});
-    const video = h('video',{class:'cam', playsinline:true, muted:true, autoplay:true, 'aria-hidden':'true'});
-    const finder = h('div',{class:'finder'}, video, h('span',{class:'finder-corners', 'aria-hidden':'true'}), h('span',{class:'finder-line', 'aria-hidden':'true'}),
+    const finder = h('div',{class:'finder'}, h('span',{class:'finder-corners', 'aria-hidden':'true'}), h('span',{class:'finder-line', 'aria-hidden':'true'}),
       h('span',{class:'finder-idle'}, ui.svg(I.qr)));
-    const startCam = async () => {
-      status.textContent = t('cd.camStarting');
-      try{
-        stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } });
-        video.srcObject = stream; await video.play(); finder.classList.add('is-live'); status.textContent = t('cd.camPoint');
-        const det = ('BarcodeDetector' in window) ? new BarcodeDetector({ formats:['qr_code'] }) : null;
-        if (!det) await loadJsQR();
-        const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently:true });
-        const tick = async () => {
-          if (!stream) return;
-          try{
-            let text = null;
-            if (det){ const r = await det.detect(video); if (r[0]) text = r[0].rawValue; }
-            else if (video.videoWidth){ cv.width=video.videoWidth; cv.height=video.videoHeight; cx.drawImage(video,0,0); const d=cx.getImageData(0,0,cv.width,cv.height); const r=window.jsQR(d.data,d.width,d.height); if (r) text=r.data; }
-            if (text && !arrive(text)){ status.textContent = t('cd.badCode'); }
-          }catch(e){}
-          loop = requestAnimationFrame(tick);
-        };
-        tick();
-      }catch(e){ status.textContent = t('cd.camNA'); }
-    };
     const code = h('input',{type:'text', inputmode:'numeric', pattern:'[0-9]*', maxlength:'6', class:'code-input', dir:'ltr', autocomplete:'one-time-code', 'aria-label':t('cd.codeLabel'), placeholder:'••••••'});
     const err = h('p',{class:'hint', 'aria-live':'polite'});
     code.addEventListener('input', () => { code.value = code.value.replace(/\D/g,'').slice(0,6); err.textContent=''; });
     const submit = () => { if (code.value.length!==6){ err.textContent=t('cd.code6'); return; } if (!arrive(code.value)) err.textContent=t('cd.notFound'); };
-    const demo = () => { const tok = P().lastDeviceToken(); if (!tok){ status.textContent=t('cd.noDeviceCard'); return; }
-      finder.classList.add('is-demo'); status.textContent=t('cd.reading'); setTimeout(()=>arrive(P().QR_PREFIX+tok), SK.reducedMotion()?100:1300); };
+    // demo scan: a short simulated read of the card saved on this device, then its own path — once, however often it is tapped
+    let busy = false;
+    const demo = () => {
+      if (busy) return;
+      const tok = P().lastDeviceToken();
+      if (!tok){ status.replaceChildren(t('cd.noDeviceCard'), ' ', h('button',{class:'link-btn', onclick:()=>go('create')}, t('path.saveCard'))); return; }
+      busy = true; demoBtn.disabled = true; demoBtn.setAttribute('aria-busy','true');
+      finder.classList.add('is-demo'); status.textContent = t('cd.reading');
+      setTimeout(() => { if (SK.store.get().route !== 'scan') return; if (!arrive(P().QR_PREFIX + tok)){ busy = false; demoBtn.disabled = false; demoBtn.removeAttribute('aria-busy'); finder.classList.remove('is-demo'); status.textContent = t('cd.badCode'); } },
+        SK.reducedMotion() ? 150 : 1300);
+    };
+    const demoBtn = ui.button(t('cd.demoScan'),{icon:'qr', onclick:demo});
     return ui.screen({ title:t('cd.scanTitle'),
       body:[ h('div',{class:'start-bar'}, listenBtn(t('cd.scanListen'))),
-        h('p',{class:'scan-ins'}, t('cd.scanIns')), finder, status,
-        h('div',{class:'two'}, ui.button(t('cd.camOn'),{variant:'ghost', icon:'qr', onclick:startCam}), ui.button(t('cd.demoScan'),{variant:'ghost', onclick:demo})),
+        h('p',{class:'scan-ins'}, t('cd.scanIns')), finder,
+        h('div',{class:'scan-demo'}, demoBtn, h('p',{class:'scan-demo-note'}, t('cd.demoHint'))), status,
         ui.card('code-card', h('p',{class:'code-q'}, t('cd.cantScan')), h('label',{class:'big-label', for:'cardcode'}, t('cd.enterCode')),
           (code.id='cardcode', code), err, ui.button(t('common.continue'),{onclick:submit})) ] });
   };

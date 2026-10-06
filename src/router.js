@@ -3,7 +3,6 @@
   const root = () => document.getElementById('app');
   const NO_NAV = new Set(['start','lang','path','pre','analyzing','insight','explain','check','entry','create','scan','welcome','devtests','ask','haram','haramTopics','haramHelp','haramLearn','haramDone','haramQuiz','demo','post','ready']);
   function paint(dir){
-    if (SK.stopCam) SK.stopCam();
     if (SK.services.repeatAfterMe) SK.services.repeatAfterMe.cancelAll();   // leaving a step: stop the microphone, ignore late results
     const st = SK.store.get(); const fn = SK.screens[st.route] || SK.screens.start;
     const node = fn(); node.classList.add('enter', dir==='back'?'from-left':'from-right');
