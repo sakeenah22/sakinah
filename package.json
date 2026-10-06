@@ -1,0 +1,13 @@
+{
+  "name": "sakeenah",
+  "version": "1.0.0",
+  "private": true,
+  "description": "سكينة | Sakeenah — AI worship-learning experience (funeral prayer). Static web app, no server and no API keys.",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/serve.mjs public 3000",
+    "start": "npm run build && npm run preview"
+  }
+}
